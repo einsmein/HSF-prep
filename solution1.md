@@ -3,7 +3,7 @@
 ## Background
 
 One Higgs boson decays into two Z boson. One Z boson decays into two muons, or two electrons. These processes happen so quickly that we can only detect the resulting muons/electrons. Higgs bosons or Z bosons can be discovered only through particles that they have decayed into. We use the fact that masses of Higgs bosons and Z bosons are somewhat well defined, and that energy and momentum are conserved. So they can be calculated from total energy and momentum of their decay products as follow: 
-![](http://mathurl.com/render.cgi?%0Am%5E2%20%3D%20E%5E2%20-%20p%5E2%5Cnocache)
+![](https://snag.gy/epP9kD.jpg)
 
 There can be a number of particles captured in a single event of collision. To know which one decays from Z bosons, we can calculate mass of every pairs of muons (as well as electrons). By drawing a histogram, mass of Z bosons will show as a peak.
 
@@ -13,7 +13,7 @@ The data contains energy and momentum of muons and electrons created in a number
 ## Higgs bosons to muons and/or electrons
 
 We know that one Higgs decays into two Z bosons. Each of Z bosons decays into either a pair of muons, or a pair of electrons. The product can then be: (1) two pairs of electrons, (2) two pairs of muons and (3) a pair of muons and a pair of electrons. 
-First we can get a list of all muons and electron pairs, among which some compose Z bosons. Without identifying intermediate Z bosons, we pair up those pairs to compute a Higgs bosons mass.
+First we can get a list of all muons and electron pairs, among which some compose Z bosons. Without identifying intermediate Z bosons, we pair up those pairs to compute Higgs bosons mass.
 
 ```python
 def higgs_mass_pairs(muons, electrons):
@@ -87,7 +87,7 @@ z_pairs_mep = (mue_pairs_mep
 		.filter(lambda event: event.size >= 2))
 ```
 
-Again, mass of a Z boson pair is calculated from energy and momentum to find a mass of their original particle. Lastly, we can identify a Higgs boson mass range from Z bosons using a histogram.
+Again, mass of a Z boson pair is calculated from energy and momentum to find a mass of their original particle. Lastly, we can identify a Higgs boson mass range using a histogram.
 
 ```python
 higgs_masses = (z_pairs_mep
