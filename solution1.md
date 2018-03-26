@@ -91,8 +91,7 @@ Again, mass of a Z boson pair is calculated from energy and momentum to find a m
 
 ```python
 higgs_masses = (z_pairs_mep
-		.map(lambda event: event
-			.pairs(lambda x, y: mass_from_mep(x,y))))
+		.map(lambda event: event.pairs(lambda x, y: mass_from_mep(x,y))))
 
 h_hist, (h_peak_min, h_peak_max), h_intv = histogram(higgs_masses.flatten, 10)
 ```
