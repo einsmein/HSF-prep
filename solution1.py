@@ -59,9 +59,9 @@ def mass_from_mep(*meps):
 	
 
 
-#------------------------------------
-# mu, e -> Find Higgs
-#------------------------------------
+# ======================================================================
+# Higgs bosons to muons and/or electrons
+# ======================================================================
 # We know that one Higgs decays into two Z bosons. 
 # Each of Z bosons decays into either a pair of muons, or a pair of electrons.
 # We can first get a list of all muons and electron pairs, among which some resemble Z bosons
@@ -76,13 +76,13 @@ masses = (events.lazy
 			.filter(lambda event: event.muons.size + event.electrons.size >= 4)
 			.map(lambda event: higgs_mass_pairs(event.muons, event.electrons)))
 
-# plt.hist(masses.collect.flatten) # , rwidth=0.5)
-# plt.show()
+plt.hist(masses.collect.flatten) # , rwidth=0.5)
+plt.show()
 # print(masses.collect.flatten.size)
 
-#------------------------------------
-# mu, e -> Z -> Find Higgs
-#------------------------------------
+# ======================================================================
+# Higgs bozons to Z bosons, Z bosons to muons and/or electrons
+# ======================================================================
 def z_mep_pairs(muons, electrons):
 	all_pairs = muons.pairs(mass_energy_momentum)
 	el = electrons.pairs(mass_energy_momentum)
@@ -121,19 +121,16 @@ def histogram(data, bin_width=5):
 	return hist, (peak, peak+bin_width), intervals
 
 # events --> event {mu: , e: ...}
-# return [e1[pair1[],pair2[]], e2[pair1[mep],pair2[mep],pair..], e...]
+# return [e1[pair1[mep],pair2[mep]], e2[pair1[mep],pair2[mep],pair..], e...]
 # First, events where the number muons and electrons is less than four can be filtered out since Higgs will decays in to four particles (muons/electrons)
 # Then muons are paired up with muons and electrons are paired up with electrons.
 # To identify a particle that each pair decayed from, mass is calculated from energy and momentum. 
 # (Energy and momentum are also returned as it will be used in the next step)
 # So this list contains mass, energy and momentum of every muon/electron pair in every event
-mue_pairs_mep = (events.lazy
-					.filter(lambda event: event.muons.size + event.electrons.size >= 4) 
-						# 43 events
-					.map(lambda event: z_mep_pairs(event.muons, event.electrons)) 
-						# 119 pairs in 43 events
-					# .flatten
-					.collect)
+mue_pairs_mep = (events
+					.filter(lambda event: event.muons.size + event.electrons.size >= 4) # 43 events
+					.map(lambda event: z_mep_pairs(event.muons, event.electrons)) # 119 pairs in 43 events
+					)
 
 # To identify Z bosons, histogram is constructed from masses all those muon pairs and electron pairs.
 # Histogram peak indicates Z bosons, whose mass range is then used to filter muon/electron pairs.
@@ -151,18 +148,16 @@ z_pairs_mep = (mue_pairs_mep
 			.filter(lambda event: event.size >= 2)
 		)
 
-#print(z_pairs_mep.size)
-
 higgs_masses = (z_pairs_mep
 				.map(lambda event: event
 					# x = [m, e_sq, p_sq]
 					.pairs(lambda x, y: mass_from_mep(x,y)))
 					# .pairs(lambda x, y: sqrt((x[1]+y[1])-(x[2]+y[2]))))
-				# )
-				.flatten)
+				# .flatten
+				)
 
-h_hist, (h_peak_min, h_peak_max), h_intv = histogram(higgs_masses, 10)
-plt.hist(higgs_masses.collect, h_intv) #, rwidth=0.5)
+h_hist, (h_peak_min, h_peak_max), h_intv = histogram(higgs_masses.flatten, 10)
+plt.hist(higgs_masses.flatten, h_intv) #, rwidth=0.5)
 plt.show()
 
 
