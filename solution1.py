@@ -149,9 +149,8 @@ z_pairs_mep = (mue_pairs_mep
 		)
 
 higgs_masses = (z_pairs_mep
-				.map(lambda event: event
+				.map(lambda event: event.pairs(lambda x, y: mass_from_mep(x,y)))
 					# x = [m, e_sq, p_sq]
-					.pairs(lambda x, y: mass_from_mep(x,y)))
 					# .pairs(lambda x, y: sqrt((x[1]+y[1])-(x[2]+y[2]))))
 				# .flatten
 				)
