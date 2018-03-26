@@ -27,8 +27,8 @@ Since the number of muons and electrons from a Higgs boson is at least four, we 
 
 ```python
 masses = (events
-			.filter(lambda event: event.muons.size + event.electrons.size >= 4)
-			.map(lambda event: higgs_mass_pairs(event.muons, event.electrons)))
+	.filter(lambda event: event.muons.size + event.electrons.size >= 4)
+	.map(lambda event: higgs_mass_pairs(event.muons, event.electrons)))
 ```
 
 ![](https://snag.gy/2ISPVD.jpg)
