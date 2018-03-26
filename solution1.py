@@ -76,7 +76,7 @@ masses = (events.lazy
 			.filter(lambda event: event.muons.size + event.electrons.size >= 4)
 			.map(lambda event: higgs_mass_pairs(event.muons, event.electrons)))
 
-# plt.hist(masses.collect.flatten, rwidth=0.5)
+# plt.hist(masses.collect.flatten) # , rwidth=0.5)
 # plt.show()
 # print(masses.collect.flatten.size)
 
@@ -162,7 +162,7 @@ higgs_masses = (z_pairs_mep
 				.flatten)
 
 h_hist, (h_peak_min, h_peak_max), h_intv = histogram(higgs_masses, 10)
-plt.hist(higgs_masses.collect, h_intv, rwidth=0.5)
+plt.hist(higgs_masses.collect, h_intv) #, rwidth=0.5)
 plt.show()
 
 
