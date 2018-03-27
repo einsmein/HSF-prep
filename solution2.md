@@ -37,39 +37,37 @@ def mass(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 
 	Pair_M[index] = Event_Pair_M
 
-
-Pair_M = np.empty(len(starts), dtype=(object))
-vectorize(mass, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
-Pair_M = np.concatenate(Pair_M)
 ```
 
 ```python
-	leading step 0 (100.0% at leading): 
-	    index_range = range(starts[index], stops[index])
-	    ...advancing 1
+>>> Pair_M = np.empty(len(starts), dtype=(object))
+>>> vectorize(mass, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
+leading step 0 (100.0% at leading): 
+    index_range = range(starts[index], stops[index])
+    ...advancing 1
 
-	leading step 1 (100.0% at leading): 
-	    pair_index_list = list(combinations(index_range, 2))
-	    ...advancing 2
+leading step 1 (100.0% at leading): 
+    pair_index_list = list(combinations(index_range, 2))
+    ...advancing 2
 
-	leading step 2 (100.0% at leading): 
-	    Event_Pair_M = np.empty(len(pair_index_list))
-	    ...advancing 3
+leading step 2 (100.0% at leading): 
+    Event_Pair_M = np.empty(len(pair_index_list))
+    ...advancing 3
 
-	leading step 3 (100.0% at leading): 
-	    for i in range(len(pair_index_list)):
-	        Event_Pair_M[i] = np.sqrt((((((Muon_E[pair_index_list[i][0]] + Muon_E[pair_index_list[i][1]]) ** 2) - ((Muon_Px[pair_index_list[i][0]] + Muon_Px[pair_index_list[i][1]]) ** 2)) - ((Muon_Py[pair_index_list[i][0]] + Muon_Py[pair_index_list[i][1]]) ** 2)) - ((Muon_Pz[pair_index_list[i][0]] + Muon_Pz[pair_index_list[i][1]]) ** 2)))
-	    ...advancing 4
+leading step 3 (100.0% at leading): 
+    for i in range(len(pair_index_list)):
+        Event_Pair_M[i] = np.sqrt((((((Muon_E[pair_index_list[i][0]] + Muon_E[pair_index_list[i][1]]) ** 2) - ((Muon_Px[pair_index_list[i][0]] + Muon_Px[pair_index_list[i][1]]) ** 2)) - ((Muon_Py[pair_index_list[i][0]] + Muon_Py[pair_index_list[i][1]]) ** 2)) - ((Muon_Pz[pair_index_list[i][0]] + Muon_Pz[pair_index_list[i][1]]) ** 2)))
+    ...advancing 4
 
-	leading step 5 (41.64% at leading): 
-	    Pair_M[index] = Event_Pair_M
-	    ...catching up 5 (41.64% at leading)
-	    ...catching up 6 (98.27% at leading)
-	    ...catching up 7 (98.27% at leading)
-	    ...catching up 8 (99.67% at leading)
-	    ...catching up 9 (99.67% at leading)
-	    ...catching up 10 (99.67% at leading)
-	    ...advancing 11
+leading step 5 (41.64% at leading): 
+    Pair_M[index] = Event_Pair_M
+    ...catching up 5 (41.64% at leading)
+    ...catching up 6 (98.27% at leading)
+    ...catching up 7 (98.27% at leading)
+    ...catching up 8 (99.67% at leading)
+    ...catching up 9 (99.67% at leading)
+    ...catching up 10 (99.67% at leading)
+    ...advancing 11
 
 ```
 
@@ -102,49 +100,51 @@ def pair(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 
 
 ```
-	leading step 0 (100.0% at leading): 
-	    N = (stops[index] - starts[index])
-	    ...advancing 1
+>>> Pair_M = np.empty(len(starts), dtype=(object))
+>>> vectorize(pair_listing, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
+leading step 0 (100.0% at leading): 
+    N = (stops[index] - starts[index])
+    ...advancing 1
 
-	leading step 1 (100.0% at leading): 
-	    NPair = int(((N * (N - 1)) / 2))
-	    ...advancing 2
+leading step 1 (100.0% at leading): 
+    NPair = int(((N * (N - 1)) / 2))
+    ...advancing 2
 
-	leading step 2 (100.0% at leading): 
-	    Event_Pair_M = np.empty(NPair)
-	    ...advancing 3
+leading step 2 (100.0% at leading): 
+    Event_Pair_M = np.empty(NPair)
+    ...advancing 3
 
-	leading step 3 (100.0% at leading): 
-	    i = 0
-	    ...advancing 4
+leading step 3 (100.0% at leading): 
+    i = 0
+    ...advancing 4
 
-	leading step 4 (100.0% at leading): 
-	    for j in reversed(range(1, N)):
-	        Event_Pair_M[i:(i + j)] = (((Muon_E[((stops[index] - j) - 1)] * j) + Muon_E[(stops[index] - j):stops[index]]) ** 2)
-	        Event_Pair_M[i:(i + j)] = (Event_Pair_M[i:(i + j)] - (((Muon_Px[((stops[index] - j) - 1)] * j) + Muon_Px[(stops[index] - j):stops[index]]) ** 2))
-	        Event_Pair_M[i:(i + j)] = (Event_Pair_M[i:(i + j)] - (((Muon_Py[((stops[index] - j) - 1)] * j) + Muon_Py[(stops[index] - j):stops[index]]) ** 2))
-	        Event_Pair_M[i:(i + j)] = (Event_Pair_M[i:(i + j)] - (((Muon_Pz[((stops[index] - j) - 1)] * j) + Muon_Pz[(stops[index] - j):stops[index]]) ** 2))
-	        i = (i + j)
-	    ...advancing 5
+leading step 4 (100.0% at leading): 
+    for j in reversed(range(1, N)):
+        Event_Pair_M[i:(i + j)] = (((Muon_E[((stops[index] - j) - 1)] * j) + Muon_E[(stops[index] - j):stops[index]]) ** 2)
+        Event_Pair_M[i:(i + j)] = (Event_Pair_M[i:(i + j)] - (((Muon_Px[((stops[index] - j) - 1)] * j) + Muon_Px[(stops[index] - j):stops[index]]) ** 2))
+        Event_Pair_M[i:(i + j)] = (Event_Pair_M[i:(i + j)] - (((Muon_Py[((stops[index] - j) - 1)] * j) + Muon_Py[(stops[index] - j):stops[index]]) ** 2))
+        Event_Pair_M[i:(i + j)] = (Event_Pair_M[i:(i + j)] - (((Muon_Pz[((stops[index] - j) - 1)] * j) + Muon_Pz[(stops[index] - j):stops[index]]) ** 2))
+        i = (i + j)
+    ...advancing 5
 
-	leading step 10 (41.64% at leading): 
-	    Pair_M[index] = np.sqrt(Event_Pair_M)
-	    ...catching up 6 (41.64% at leading)
-	    ...catching up 7 (41.64% at leading)
-	    ...catching up 8 (41.64% at leading)
-	    ...catching up 9 (41.64% at leading)
-	    ...catching up 10 (41.64% at leading)
-	    ...catching up 11 (98.27% at leading)
-	    ...catching up 12 (98.27% at leading)
-	    ...catching up 13 (98.27% at leading)
-	    ...catching up 14 (98.27% at leading)
-	    ...catching up 15 (98.27% at leading)
-	    ...catching up 16 (99.67% at leading)
-	    ...catching up 17 (99.67% at leading)
-	    ...catching up 18 (99.67% at leading)
-	    ...catching up 19 (99.67% at leading)
-	    ...catching up 20 (99.67% at leading)
-	    ...advancing 21
+leading step 10 (41.64% at leading): 
+    Pair_M[index] = np.sqrt(Event_Pair_M)
+    ...catching up 6 (41.64% at leading)
+    ...catching up 7 (41.64% at leading)
+    ...catching up 8 (41.64% at leading)
+    ...catching up 9 (41.64% at leading)
+    ...catching up 10 (41.64% at leading)
+    ...catching up 11 (98.27% at leading)
+    ...catching up 12 (98.27% at leading)
+    ...catching up 13 (98.27% at leading)
+    ...catching up 14 (98.27% at leading)
+    ...catching up 15 (98.27% at leading)
+    ...catching up 16 (99.67% at leading)
+    ...catching up 17 (99.67% at leading)
+    ...catching up 18 (99.67% at leading)
+    ...catching up 19 (99.67% at leading)
+    ...catching up 20 (99.67% at leading)
+    ...advancing 21
 
 ```
 
