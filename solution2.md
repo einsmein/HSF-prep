@@ -99,7 +99,7 @@ def pair(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 ```
 
 
-```
+```python
 >>> Pair_M = np.empty(len(starts), dtype=(object))
 >>> vectorize(pair_listing, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 leading step 0 (100.0% at leading): 
@@ -172,15 +172,13 @@ def get_pair_mass(index, pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 			- (Muon_Px[pair_index[index][0]] + Muon_Px[pair_index[index][1]])**2
 			- (Muon_Py[pair_index[index][0]] + Muon_Py[pair_index[index][1]])**2
 			- (Muon_Pz[pair_index[index][0]] + Muon_Pz[pair_index[index][1]])**2)
-
-
-Pair_M = np.empty(len(pair_index))
-vectorize(get_pair_mass, len(pair_index), pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 ```
 
 This method was the fastest with least vectorized steps among the three.
 
 ```python
+>>> Pair_M = np.empty(len(pair_index))
+>>> vectorize(get_pair_mass, len(pair_index), pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 leading step 0 (100.0% at leading): 
     index_range = range(starts[index], stops[index])
     ...advancing 1
