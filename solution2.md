@@ -258,11 +258,14 @@ leading step 8 (41.64% at leading):
 An alternative (shown below) is to keep track of mass closest to 91 GeV while going through the loop. With this method, execution time stayed somewhat the same but it took 24 vectorized step instead.
 
 ```python
+def best_Z(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M):
+	...
 	for i in range(len(pair_index_list)):
 		mass = ...
 
 		if abs(mass-91) < abs(mass-mass_Z):
 			mass_Z = mass
 	Z_M[index] = mass_Z
+	
 ```
 
