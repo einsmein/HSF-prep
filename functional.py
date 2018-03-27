@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from oamap.proxy import ListProxy
+from vectorized import vectorize
 
 # This is a hack to make Python's list and iterator types functional.
 
@@ -113,6 +114,23 @@ def mapper(lst):
     out.func_name = "[...].map"
     out.__doc__ = mapper.__doc__
     return out
+
+def vmapper(lst):
+    """
+    Apply a given function to each element of this list or generator using vectorized function.
+    
+    The first argument must be a function, and the second argument must be an output array.
+    Any number of argument can be passed to the vectorized function
+    """
+    if isinstance(lst, (list, tuple, ListProxy)):
+        # out = lambda f, len_out, *args: vectorize(f, len(lst), lst, *args)
+        out = lambda f, out, *args: (vectorize(f, len(lst), out, lst, *args), out)[-1]
+    else:
+        out = lambda f, out, *args: (vectorize(f, len(lst), out, lst, *args), out)[-1]
+    out.func_name = "[...].vmap"
+    out.__doc__ = mapper.__doc__
+    return out
+
 
 def flattener(lst):
     """
@@ -356,6 +374,7 @@ proxy_builtin(list)["take"] = property(taker);                      hasattr([], 
 proxy_builtin(list)["collect"] = property(collecter);               hasattr([], "collect")
 proxy_builtin(list)["lazy"] = property(lazyer);                     hasattr([], "lazy")
 proxy_builtin(list)["map"] = property(mapper);                      hasattr([], "map")
+proxy_builtin(list)["vmap"] = property(vmapper);                    hasattr([], "vmap")
 proxy_builtin(list)["flatten"] = property(flattener);               hasattr([], "flatten")
 proxy_builtin(list)["flatmap"] = property(flatmapper);              hasattr([], "flatmap")
 proxy_builtin(list)["filter"] = property(filterer);                 hasattr([], "filter")
@@ -374,6 +393,7 @@ proxy_builtin(tuple)["take"] = property(taker);                     hasattr((), 
 proxy_builtin(tuple)["collect"] = property(collecter);              hasattr((), "collect")
 proxy_builtin(tuple)["lazy"] = property(lazyer);                    hasattr((), "lazy")
 proxy_builtin(tuple)["map"] = property(mapper);                     hasattr((), "map")
+proxy_builtin(tuple)["vmap"] = property(vmapper);                    hasattr([], "vmap")
 proxy_builtin(tuple)["flatten"] = property(flattener);              hasattr((), "flatten")
 proxy_builtin(tuple)["flatmap"] = property(flatmapper);             hasattr((), "flatmap")
 proxy_builtin(tuple)["filter"] = property(filterer);                hasattr((), "filter")

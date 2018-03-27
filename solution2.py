@@ -18,6 +18,7 @@ starts = columns["Muon_Px"].starts
 stops = columns["Muon_Px"].stops
 
 
+
 # ======================================================================
 # Examples
 # ======================================================================
@@ -45,7 +46,7 @@ highest_by_event = np.empty(len(starts))
 # ======================================================================
 # Baby steps
 # ======================================================================
-def baby_step(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
+def baby_step(index, Pair_M, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
 	# Pair_E = list(combinations(Muon_E[starts[index]:stops[index]], 2))
 	# Pair_Px = list(combinations(Muon_Px[starts[index]:stops[index]], 2))
 	# Pair_Py = list(combinations(Muon_Py[starts[index]:stops[index]], 2))
@@ -65,6 +66,15 @@ def baby_step(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 							- (Muon_Pz[pair_index_list[i][0]] + Muon_Pz[pair_index_list[i][1]])**2)
 
 	Pair_M[index] = Event_Pair_M
+
+
+# Z_M = np.empty(len(starts))
+# zmass = list(starts).vmap(best_Z, Z_M, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
+
+Pair_M = np.empty(len(starts), dtype=(object))
+zmass = list(starts).vmap(baby_step, Pair_M, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
+# vectorize(baby_step, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
+zmass = np.concatenate(zmass)
 
 
 # ======================================================================
@@ -112,7 +122,7 @@ def get_pair_mass(index, pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 # ======================================================================
 # Best Z candidate
 # ======================================================================
-def best_Z(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M):
+def best_Z(index, Z_M, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
 	index_range = range(starts[index], stops[index])
 	pair_index_list = list(combinations(index_range, 2))
 	Event_Pair_M = np.zeros(len(pair_index_list))
@@ -132,6 +142,8 @@ def best_Z(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M):
 		mass_Z = Event_Pair_M[np.argmin(np.abs(Event_Pair_M-91))] # mass_Z
 	Z_M[index] = mass_Z
 
+# Z_M = np.empty(len(starts))
+# zmass = list(starts).vmap(best_Z, Z_M, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
 
 
 # ======================================================================
@@ -140,7 +152,7 @@ def best_Z(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M):
 
 def Z_mass_from_baby_step(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
 	Pair_M = np.empty(len(starts), dtype=(object))
-	vectorize(baby_step, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
+	vectorize(baby_step, len(starts), Pair_M, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
 	return np.concatenate(Pair_M)
 
 def Z_mass_from_pair_listing(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
@@ -159,7 +171,7 @@ def Z_mass_from_divided_steps(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
 
 def best_Z_candidate(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
 	Z_M = np.empty(len(starts))
-	vectorize(best_Z, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M)
+	vectorize(best_Z, len(starts), Z_M, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
 	return Z_M[Z_M > np.array(0)]
 
 	
@@ -170,7 +182,7 @@ def best_Z_candidate(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
 start = time.time()
 # zmass = Z_mass_from_baby_step(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
 # zmass = Z_mass_from_pair_listing(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
-zmass = Z_mass_from_divided_steps(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
+# zmass = Z_mass_from_divided_steps(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
 # zmass = best_Z_candidate(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
 stop = time.time()
 print(stop-start)
@@ -182,7 +194,7 @@ print(stop-start)
 # print(Pair_M)
 binwidth = 5
 print(zmass.size)
-plt.hist(zmass, bins=range(int(mass.min()), int(mass.max()) + binwidth, binwidth))
+plt.hist(zmass, bins=range(int(zmass.min()), int(zmass.max()) + binwidth, binwidth))
 plt.show()
 
 
