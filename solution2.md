@@ -269,9 +269,9 @@ def best_Z(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M):
 ```
 
 
-## Early version of functional interface
+## An early version of functional interface
 
-Usage of the vectorization can be further simplified by hiding vectorized functions under a functinoal interface. A function `vmap` was added to a `functional.py` library whose implementation is shown below. It's basically a mapping function that use vectorization under the hood. The biggest limitation of this implementation is that it requires an output array to be initiated and passed as an argument, which does not make much sense at all, but it makes it works for now.
+Usage of the vectorization can be further simplified by hiding vectorized functions under functional interface. `vmap` was added to a `functional.py` library (implementation shown below). It's basically a mapping function that use vectorization under the hood. Currently, the biggest limitation of this implementation is that it requires an output array to be initiated and passed as an argument, which does not make sense at all, but it makes it works for now.
 
 ```python
 def vmapper(lst):
@@ -283,8 +283,8 @@ def vmapper(lst):
     out.__doc__ = mapper.__doc__
     return out```
 
-The first argument of the function must be index as before. In addition, the function must take an instantiated output array as the second argument, and a list that index iterates over as the third argument. 
-As an example, consider this function that add constant value to all elements in a list of integers. Since output is always create as a numpy array, a list is converted to a numpy array.
+For a vectorized function, some more restriction is required. In addition to index as the first argument, it must take an instantiated output array as the second argument, and a list that index iterates over as the third argument. 
+As an example, consider this function that add constant value to all elements in a list of integers.
 
 ```python
 >>> def add_const(index, out, lst, const):
@@ -307,7 +307,7 @@ leading step 1 (100.0% at leading):
 array([3., 4., 5.])
 ```
 
-This functional call is then apply to compute Z mass using baby step method.
+This functional call is then apply to compute Z mass using baby step method. The only modification to the original implementation is moving an output array `Pair_M` to the second argument.
 
 ```python
 Pair_M = np.empty(len(starts), dtype=(object))
