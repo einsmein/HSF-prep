@@ -37,13 +37,11 @@ def mass(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 
 	Pair_M[index] = Event_Pair_M
 
-
-Pair_M = np.empty(len(starts), dtype=(object))
-vectorize(mass, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
-Pair_M = np.concatenate(Pair_M)
 ```
 
 ```python
+>>> Pair_M = np.empty(len(starts), dtype=(object))
+>>> vectorize(mass, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 leading step 0 (100.0% at leading): 
     index_range = range(starts[index], stops[index])
     ...advancing 1
@@ -102,6 +100,8 @@ def pair(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 
 
 ```
+>>> Pair_M = np.empty(len(starts), dtype=(object))
+>>> vectorize(pair_listing, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 leading step 0 (100.0% at leading): 
     N = (stops[index] - starts[index])
     ...advancing 1
@@ -299,3 +299,4 @@ def best_Z_candidate(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
 	vectorize(best_Z, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M)
 	return Z_M[Z_M > np.array(0)]
 ```
+
