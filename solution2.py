@@ -4,7 +4,7 @@ import numpy as np
 from itertools import combinations
 import matplotlib.pyplot as plt
 import time
-
+import functional
 
 columnar_events = uproot.open("http://scikit-hep.org/uproot/examples/HZZ.root")["events"]
 columns = columnar_events.arrays(["*Muon*"])
@@ -17,6 +17,10 @@ Muon_Pz = columns["Muon_Pz"].content
 starts = columns["Muon_Px"].starts
 stops = columns["Muon_Px"].stops
 
+
+# ======================================================================
+# Examples
+# ======================================================================
 def totalp(index, Muon_Px, Muon_Py, Muon_Pz, Muon_P):
 	px2 = Muon_Px[index]**2
 	py2 = Muon_Py[index]**2
@@ -37,35 +41,6 @@ def maxp(index, starts, stops, Muon_P, highest_by_event):
 highest_by_event = np.empty(len(starts))
 # vectorize(maxp, len(starts), starts, stops, Muon_P, highest_by_event)
 
-# ======================================================================
-# divide steps
-# ======================================================================
-
-def pair(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_E, Pair_Px, Pair_Py, Pair_Pz):
-	Pair_E[index] = list(combinations(Muon_E[starts[index]:stops[index]], 2))
-	Pair_Px[index] = list(combinations(Muon_Px[starts[index]:stops[index]], 2))
-	Pair_Py[index] = list(combinations(Muon_Py[starts[index]:stops[index]], 2))
-	Pair_Pz[index] = list(combinations(Muon_Pz[starts[index]:stops[index]], 2))
-
-def pair_mass(index, Pair_E, Pair_Px, Pair_Py, Pair_Pz, Pair_M):
-	Pair_M[index] = np.sqrt(Pair_E[index].sum**2 - Pair_Px[index].sum**2 - Pair_Py[index].sum**2 - Pair_Pz[index].sum**2)
-
-# start = time.time()
-# Pair_E = np.empty(len(starts), dtype=(object))
-# Pair_Px = np.empty(len(starts), dtype=(object))
-# Pair_Py = np.empty(len(starts), dtype=(object))
-# Pair_Pz = np.empty(len(starts), dtype=(object))
-# vectorize(pair, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_E, Pair_Px, Pair_Py, Pair_Pz)
-
-# Pair_E = list(Pair_E).flatten
-# Pair_Px = list(Pair_Px).flatten
-# Pair_Py = list(Pair_Py).flatten
-# Pair_Pz = list(Pair_Pz).flatten
-# Pair_M = np.empty(len(Pair_E))
-# vectorize(pair_mass, len(Pair_E), Pair_E, Pair_Px, Pair_Py, Pair_Pz, Pair_M)
-
-# stop = time.time()
-# print(stop-start)
 
 # ======================================================================
 # Baby steps
@@ -119,39 +94,95 @@ def pair_listing(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M
 	# Pair_M[index] = np.sqrt(Pair_E - Pair_Px - Pair_Py - Pair_Pz)
 	Pair_M[index] = np.sqrt(Event_Pair_M)
 
+# ======================================================================
+# divided vectorized steps
+# ======================================================================
+
+def get_pair_index(index, starts, stops, pair_index_per_event):
+	index_range = range(starts[index], stops[index])
+	pair_index_per_event[index] = list(combinations(index_range, 2))
+
+def get_pair_mass(index, pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
+	Pair_M[index] = np.sqrt((Muon_E[pair_index[index][0]] + Muon_E[pair_index[index][1]])**2
+			- (Muon_Px[pair_index[index][0]] + Muon_Px[pair_index[index][1]])**2
+			- (Muon_Py[pair_index[index][0]] + Muon_Py[pair_index[index][1]])**2
+			- (Muon_Pz[pair_index[index][0]] + Muon_Pz[pair_index[index][1]])**2)
+
+
+# ======================================================================
+# Best Z candidate
+# ======================================================================
+def best_Z(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M):
+	index_range = range(starts[index], stops[index])
+	pair_index_list = list(combinations(index_range, 2))
+	Event_Pair_M = np.zeros(len(pair_index_list))
+	mass_Z = -1
+	for i in range(len(pair_index_list)):
+		Event_Pair_M[i] = (
+		# mass = (
+					np.sqrt((Muon_E[pair_index_list[i][0]] + Muon_E[pair_index_list[i][1]])**2
+						- (Muon_Px[pair_index_list[i][0]] + Muon_Px[pair_index_list[i][1]])**2
+						- (Muon_Py[pair_index_list[i][0]] + Muon_Py[pair_index_list[i][1]])**2
+						- (Muon_Pz[pair_index_list[i][0]] + Muon_Pz[pair_index_list[i][1]])**2)
+				)
+		# if abs(mass-91) < abs(mass-mass_Z):
+		# 	mass_Z = mass
+
+	if len(pair_index_list) > 0:
+		mass_Z = Event_Pair_M[np.argmin(np.abs(Event_Pair_M-91))] # mass_Z
+	Z_M[index] = mass_Z
+
+
 
 # ======================================================================
 # Interfaces
 # ======================================================================
-def mass_from_baby_step():
+
+def Z_mass_from_baby_step(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
 	Pair_M = np.empty(len(starts), dtype=(object))
 	vectorize(baby_step, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 	return np.concatenate(Pair_M)
 
-def mass_from_pair_listing():
+def Z_mass_from_pair_listing(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
 	Pair_M = np.empty(len(starts), dtype=(object))
 	vectorize(pair_listing, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 	return np.concatenate(Pair_M)
 
+def Z_mass_from_divided_steps(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
+	pair_index_per_event = np.empty(len(starts), dtype=(object))
+	vectorize(get_pair_index, len(starts), starts, stops, pair_index_per_event)
+	pair_index = list(pair_index_per_event).flatten
+
+	Pair_M = np.empty(len(pair_index))
+	vectorize(get_pair_mass, len(pair_index), pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
+	return Pair_M
+
+def best_Z_candidate(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
+	Z_M = np.empty(len(starts))
+	vectorize(best_Z, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M)
+	return Z_M[Z_M > np.array(0)]
+
+	
+
 # ======================================================================
 # Calling interfaces
 # ======================================================================
-# start = time.time()
-# Pair_M = mass_from_baby_step()
-Pair_M = mass_from_pair_listing()
-# stop = time.time()
-# print(stop-start)
-# print(Pair_M.size)
+start = time.time()
+# zmass = Z_mass_from_baby_step(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
+# zmass = Z_mass_from_pair_listing(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
+zmass = Z_mass_from_divided_steps(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
+# zmass = best_Z_candidate(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
+stop = time.time()
+print(stop-start)
 
-# print(Pair_M)
 
 # ======================================================================
 # Display result
 # ======================================================================
 # print(Pair_M)
 binwidth = 5
-print(Pair_M)
-plt.hist(Pair_M, bins=range(int(Pair_M.min()), int(Pair_M.max()) + binwidth, binwidth))
+print(zmass.size)
+plt.hist(zmass, bins=range(int(mass.min()), int(mass.max()) + binwidth, binwidth))
 plt.show()
 
 
