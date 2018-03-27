@@ -2,7 +2,6 @@ from vectorized import vectorize
 import uproot
 import numpy as np
 from itertools import combinations
-import functional
 import matplotlib.pyplot as plt
 import time
 
@@ -71,7 +70,7 @@ def pair_mass(index, Pair_E, Pair_Px, Pair_Py, Pair_Pz, Pair_M):
 # ======================================================================
 # Baby steps
 # ======================================================================
-def mass(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
+def baby_step(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 	# Pair_E = list(combinations(Muon_E[starts[index]:stops[index]], 2))
 	# Pair_Px = list(combinations(Muon_Px[starts[index]:stops[index]], 2))
 	# Pair_Py = list(combinations(Muon_Py[starts[index]:stops[index]], 2))
@@ -90,75 +89,56 @@ def mass(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 							- (Muon_Py[pair_index_list[i][0]] + Muon_Py[pair_index_list[i][1]])**2
 							- (Muon_Pz[pair_index_list[i][0]] + Muon_Pz[pair_index_list[i][1]])**2)
 
-	Pair_M[index] = list(Event_Pair_M)
+	Pair_M[index] = Event_Pair_M
 
 
 # ======================================================================
-# Two list for two muons in a pair
+# Pair listing
 # ======================================================================
-def pair(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
+def pair_listing(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 	N = stops[index]-starts[index]
 	NPair = int(N*(N-1)/2)
-	# Pair1_E = np.empty(NPair)
-	# Pair2_E = np.empty(NPair)
-	# Pair1_Px = np.empty(NPair)
-	# Pair2_Px = np.empty(NPair)
-	# Pair1_Py = np.empty(NPair)
-	# Pair2_Py = np.empty(NPair)
-	# Pair1_Pz = np.empty(NPair)
-	# Pair2_Pz = np.empty(NPair)
-	Pair_E = np.empty(NPair)
-	Pair_Px = np.empty(NPair)
-	Pair_Py = np.empty(NPair)
-	Pair_Pz = np.empty(NPair)
+	# Pair_E = np.empty(NPair)
+	# Pair_Px = np.empty(NPair)
+	# Pair_Py = np.empty(NPair)
+	# Pair_Pz = np.empty(NPair)
+	Event_Pair_M = np.empty(NPair)
 
 	i = 0
 	for j in reversed(range(1, N)):
-		# Pair1_E[i:i+j] = Muon_E[stops[index]-j-1] * j
-		# Pair2_E[i:i+j] = Muon_E[stops[index]-j:stops[index]]
-		# Pair1_Px[i:i+j] = Muon_Px[stops[index]-j-1] * j
-		# Pair2_Px[i:i+j] = Muon_Px[stops[index]-j:stops[index]]
-		# Pair1_Py[i:i+j] = Muon_Py[stops[index]-j-1] * j
-		# Pair2_Py[i:i+j] = Muon_Py[stops[index]-j:stops[index]]
-		# Pair1_Pz[i:i+j] = Muon_Pz[stops[index]-j-1] * j
-		# Pair2_Pz[i:i+j] = Muon_Pz[stops[index]-j:stops[index]]
-		Pair_E[i:i+j] = (Muon_E[stops[index]-j-1] * j + Muon_E[stops[index]-j:stops[index]])**2
-		Pair_Px[i:i+j] = (Muon_Px[stops[index]-j-1] * j + Muon_Px[stops[index]-j:stops[index]])**2
-		Pair_Py[i:i+j] = (Muon_Py[stops[index]-j-1] * j + Muon_Py[stops[index]-j:stops[index]])**2
-		Pair_Pz[i:i+j] = (Muon_Pz[stops[index]-j-1] * j + Muon_Pz[stops[index]-j:stops[index]])**2
+		# Pair_E[i:i+j] = (Muon_E[stops[index]-j-1] * j + Muon_E[stops[index]-j:stops[index]])**2
+		# Pair_Px[i:i+j] = (Muon_Px[stops[index]-j-1] * j + Muon_Px[stops[index]-j:stops[index]])**2
+		# Pair_Py[i:i+j] = (Muon_Py[stops[index]-j-1] * j + Muon_Py[stops[index]-j:stops[index]])**2
+		# Pair_Pz[i:i+j] = (Muon_Pz[stops[index]-j-1] * j + Muon_Pz[stops[index]-j:stops[index]])**2
+		Event_Pair_M[i:i+j] = (Muon_E[stops[index]-j-1] * j + Muon_E[stops[index]-j:stops[index]])**2
+		Event_Pair_M[i:i+j] = Event_Pair_M[i:i+j] - (Muon_Px[stops[index]-j-1] * j + Muon_Px[stops[index]-j:stops[index]])**2
+		Event_Pair_M[i:i+j] = Event_Pair_M[i:i+j] - (Muon_Py[stops[index]-j-1] * j + Muon_Py[stops[index]-j:stops[index]])**2
+		Event_Pair_M[i:i+j] = Event_Pair_M[i:i+j] - (Muon_Pz[stops[index]-j-1] * j + Muon_Pz[stops[index]-j:stops[index]])**2
 		i = i + j
 
-	Pair_M[index] = list(np.sqrt((Pair1_E+Pair2_E)**2 - (Pair1_Px+Pair2_Px)**2 - (Pair1_Py+Pair2_Py)**2 - (Pair1_Pz+Pair2_Pz)**2))
-	# Pair_M[index] = list(np.sqrt(Pair_E - Pair_Px - Pair_Py - Pair_Pz))
+	# Pair_M[index] = np.sqrt(Pair_E - Pair_Px - Pair_Py - Pair_Pz)
+	Pair_M[index] = np.sqrt(Event_Pair_M)
 
-
-start = time.time()
-
-Pair_M = np.empty(len(starts), dtype=(object))
-vectorize(pair, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
-Pair_M = list(Pair_M).flatten
-
-stop = time.time()
-print(stop-start)
-# print(Pair_M)
-
-# Pair_M = np.empty(1, dtype=(object))
-# pair(0, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 
 # ======================================================================
 # Interfaces
 # ======================================================================
-def baby_step():
+def mass_from_baby_step():
 	Pair_M = np.empty(len(starts), dtype=(object))
-	vectorize(mass, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
-	return Pair_M
+	vectorize(baby_step, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
+	return np.concatenate(Pair_M)
+
+def mass_from_pair_listing():
+	Pair_M = np.empty(len(starts), dtype=(object))
+	vectorize(pair_listing, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
+	return np.concatenate(Pair_M)
 
 # ======================================================================
 # Calling interfaces
 # ======================================================================
 # start = time.time()
-# Pair_M = baby_step()
-# Pair_M = list(Pair_M).flatten
+# Pair_M = mass_from_baby_step()
+Pair_M = mass_from_pair_listing()
 # stop = time.time()
 # print(stop-start)
 # print(Pair_M.size)
@@ -169,9 +149,10 @@ def baby_step():
 # Display result
 # ======================================================================
 # print(Pair_M)
-# binwidth = 5
-# plt.hist(Pair_M, bins=range(int(min(Pair_M)), int(max(Pair_M)) + binwidth, binwidth))
-# plt.show()
+binwidth = 5
+print(Pair_M)
+plt.hist(Pair_M, bins=range(int(Pair_M.min()), int(Pair_M.max()) + binwidth, binwidth))
+plt.show()
 
 
 # Pair_E = list(combinations(Muon_E[starts[0]:stops[0]], 2))
