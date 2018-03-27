@@ -268,35 +268,3 @@ An alternative (shown below) is to keep track of mass closest to 91 GeV while go
 	Z_M[index] = mass_Z
 ```
 
-
-
-## Interfaces
-
-Finally all the functions shown in this solution are wrapped into functional interfaces which takes muon attribute arrays from HEP dataset as input.
-
-```python
-def Z_mass_from_baby_step(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
-	Pair_M = np.empty(len(starts), dtype=(object))
-	vectorize(baby_step, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
-	return np.concatenate(Pair_M)
-
-def Z_mass_from_pair_listing(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
-	Pair_M = np.empty(len(starts), dtype=(object))
-	vectorize(pair_listing, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
-	return np.concatenate(Pair_M)
-
-def Z_mass_from_divided_steps(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
-	pair_index_per_event = np.empty(len(starts), dtype=(object))
-	vectorize(get_pair_index, len(starts), starts, stops, pair_index_per_event)
-	pair_index = list(pair_index_per_event).flatten
-
-	Pair_M = np.empty(len(pair_index))
-	vectorize(get_pair_mass, len(pair_index), pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
-	return Pair_M
-
-def best_Z_candidate(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
-	Z_M = np.empty(len(starts))
-	vectorize(best_Z, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M)
-	return Z_M[Z_M > np.array(0)]
-```
-
