@@ -148,7 +148,7 @@ leading step 10 (41.64% at leading):
 
 ```
 
-This approach does not perform very well. From rough execution time measurement, it takes as long as the previous approach. This could be due to more operation loads in the loop even though there is only one loop with N iteration.
+This approach does not perform very well. From rough execution time measurement, it takes as long as the previous approach. This could be due to more operation loads in the loop and the fact that it performs vectorized operation on an array (not a single value like in the previous method.
 
 
 ## Baby Step Revisit: Divided Vectorized Functions
@@ -174,7 +174,7 @@ def get_pair_mass(index, pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 			- (Muon_Pz[pair_index[index][0]] + Muon_Pz[pair_index[index][1]])**2)
 ```
 
-This method was the fastest with least vectorized steps among the three.
+This method was the fastest with least vectorized steps among the three. It also does not takes up a lot of memory space since it only creates one extra index list, instead of a nested list of pair masses per events.
 
 ```python
 >>> Pair_M = np.empty(len(pair_index))
