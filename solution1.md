@@ -47,10 +47,9 @@ def z_mep_pairs(muons, electrons):
 	all_pairs.extend(el)
 	return all_pairs	# return [mass, energy, momentum] of every pair
 
-mue_pairs_mep = (events.lazy
+mue_pairs_mep = (events
 		.filter(lambda event: event.muons.size + event.electrons.size >= 4) 
-		.map(lambda event: z_mep_pairs(event.muons, event.electrons)) 
-		.collect)
+		.map(lambda event: z_mep_pairs(event.muons, event.electrons)))
 ```
 
 
@@ -97,3 +96,20 @@ h_hist, (h_peak_min, h_peak_max), h_intv = histogram(higgs_masses.flatten, 10)
 ```
 
 ![](https://snag.gy/PtiGTL.jpg)
+
+The last two parts can be combined to one chain functional call. Although it is possible to apply reduce on the list to get Z mass range, we would need to recalculate the *mep* values again so it is done off the chain here.
+
+```python
+mue_pairs_mep = (events
+		.filter(lambda event: event.muons.size + event.electrons.size >= 4) 
+		.map(lambda event: z_mep_pairs(event.muons, event.electrons)))
+
+z_hist, (z_peak_min, z_peak_max), _ = histogram(mue_pairs_mep
+	.flatten.map(lambda pair: pair[0]))
+
+higgs_masses = (mue_pairs_mep
+		.map(lambda event: event
+			.filter(lambda pair: pair[0] >= z_peak_min and pair[0] <= z_peak_max))
+		.filter(lambda event: event.size >= 2)
+		.map(lambda event: event.pairs(lambda x, y: mass_from_mep(x,y))))
+```

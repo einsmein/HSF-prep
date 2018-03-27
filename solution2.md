@@ -272,7 +272,7 @@ An alternative (shown below) is to keep track of mass closest to 91 GeV while go
 
 ## Interfaces
 
-Finally the functions are wrapped up into functional interfaces which takes muon attribute arrays from HEP dataset as input.
+Finally all the functions shown in this solution are wrapped into functional interfaces which takes muon attribute arrays from HEP dataset as input.
 
 ```python
 def Z_mass_from_baby_step(starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz):
