@@ -1,4 +1,4 @@
-# Solution 1: vectorized HEP
+# Solution 2: vectorized HEP
 
 ## Background
 
@@ -16,7 +16,7 @@ stops = columns["Muon_Px"].stops
 ```
 
 
-## Baby step
+## The Baby step
 
 To understand the dataset and calculation better, the most straightforward solution -- *the baby step* was taken.
 
@@ -99,7 +99,7 @@ def pair(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 ```
 
 
-```
+```python
 >>> Pair_M = np.empty(len(starts), dtype=(object))
 >>> vectorize(pair_listing, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 leading step 0 (100.0% at leading): 
@@ -148,4 +148,124 @@ leading step 10 (41.64% at leading):
 
 ```
 
-This approach does not perform very well. From rough execution time measurement, it takes as long as the previous approach. This could be due to more operation loads in the loop even though there is only one loop with N iteration.
+This approach does not perform very well. From rough execution time measurement, it takes as long as the previous approach. This could be due to more operation loads in the loop and the fact that it performs vectorized operation on an array (not a single value like in the previous method.
+
+
+## Baby Step Revisit: Divided Vectorized Functions
+Since using index pairs as in the baby step seemed like a smart idea, we use that and modify the loop instead. One way to get rid of for loop altogether is to use two vectorized function. First indexes of muon pairs are obtained for every event. Flattening that list, we get all muon pairs indexes across all events.
+
+```python
+def get_pair_index(index, starts, stops, pair_index_per_event):
+	index_range = range(starts[index], stops[index])
+	pair_index_per_event[index] = list(combinations(index_range, 2))
+
+pair_index_per_event = np.empty(len(starts), dtype=(object))
+vectorize(get_pair_index, len(starts), starts, stops, pair_index_per_event)
+pair_index = list(pair_index_per_event).flatten
+```
+
+Now we can just index on the number of muon pairs, and compute Z mass from energy and momentum using the indexes from before
+
+```python
+def get_pair_mass(index, pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
+	Pair_M[index] = np.sqrt((Muon_E[pair_index[index][0]] + Muon_E[pair_index[index][1]])**2
+			- (Muon_Px[pair_index[index][0]] + Muon_Px[pair_index[index][1]])**2
+			- (Muon_Py[pair_index[index][0]] + Muon_Py[pair_index[index][1]])**2
+			- (Muon_Pz[pair_index[index][0]] + Muon_Pz[pair_index[index][1]])**2)
+```
+
+This method was the fastest with least vectorized steps among the three. It also does not takes up a lot of memory space since it only creates one extra index list, instead of a nested list of pair masses per events.
+
+```python
+>>> Pair_M = np.empty(len(pair_index))
+>>> vectorize(get_pair_mass, len(pair_index), pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
+leading step 0 (100.0% at leading): 
+    index_range = range(starts[index], stops[index])
+    ...advancing 1
+
+leading step 1 (100.0% at leading): 
+    pair_index_per_event[index] = list(combinations(index_range, 2))
+    ...advancing 2
+
+leading step 0 (100.0% at leading): 
+    Pair_M[index] = np.sqrt((((((Muon_E[pair_index[index][0]] + Muon_E[pair_index[index][1]]) ** 2) - ((Muon_Px[pair_index[index][0]] + Muon_Px[pair_index[index][1]]) ** 2)) - ((Muon_Py[pair_index[index][0]] + Muon_Py[pair_index[index][1]]) ** 2)) - ((Muon_Pz[pair_index[index][0]] + Muon_Pz[pair_index[index][1]]) ** 2)))
+    ...advancing 1
+```
+
+## Best Z candidate
+
+To find the best Z candidate, mass is computed for each pair using the same method as in The Baby Step (since it was much simpler than the other). 
+
+```python
+def best_Z(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M):
+	index_range = range(starts[index], stops[index])
+	pair_index_list = list(combinations(index_range, 2))
+	Event_Pair_M = np.zeros(len(pair_index_list))
+	mass_Z = -1
+	for i in range(len(pair_index_list)):
+		Event_Pair_M[i] = np.sqrt((Muon_E[pair_index_list[i][0]] + Muon_E[pair_index_list[i][1]])**2
+			- (Muon_Px[pair_index_list[i][0]] + Muon_Px[pair_index_list[i][1]])**2
+			- (Muon_Py[pair_index_list[i][0]] + Muon_Py[pair_index_list[i][1]])**2
+			- (Muon_Pz[pair_index_list[i][0]] + Muon_Pz[pair_index_list[i][1]])**2)
+
+	if len(pair_index_list) > 0:
+		mass_Z = Event_Pair_M[np.argmin(np.abs(Event_Pair_M-91))]
+	Z_M[index] = mass_Z
+```
+
+```python
+>>> Z_M = np.empty(len(starts))
+>>> vectorize(best_Z, len(starts), starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M)
+leading step 0 (100.0% at leading): 
+    index_range = range(starts[index], stops[index])
+    ...advancing 1
+
+leading step 1 (100.0% at leading): 
+    pair_index_list = list(combinations(index_range, 2))
+    ...advancing 2
+
+leading step 2 (100.0% at leading): 
+    Event_Pair_M = np.zeros(len(pair_index_list))
+    ...advancing 3
+
+leading step 3 (100.0% at leading): 
+    mass_Z = -1
+    ...advancing 4
+
+leading step 4 (100.0% at leading): 
+    for i in range(len(pair_index_list)):
+        Event_Pair_M[i] = np.sqrt((((((Muon_E[pair_index_list[i][0]] + Muon_E[pair_index_list[i][1]]) ** 2) - ((Muon_Px[pair_index_list[i][0]] + Muon_Px[pair_index_list[i][1]]) ** 2)) - ((Muon_Py[pair_index_list[i][0]] + Muon_Py[pair_index_list[i][1]]) ** 2)) - ((Muon_Pz[pair_index_list[i][0]] + Muon_Pz[pair_index_list[i][1]]) ** 2)))
+    ...advancing 5
+
+leading step 6 (41.64% at leading): 
+    if (len(pair_index_list) > 0):
+        mass_Z = Event_Pair_M[np.argmin(np.abs((Event_Pair_M - 91)))]
+    ...catching up 6 (41.64% at leading)
+    ...catching up 7 (98.27% at leading)
+    ...catching up 8 (98.27% at leading)
+    ...catching up 9 (99.67% at leading)
+    ...catching up 10 (99.67% at leading)
+    ...catching up 11 (99.67% at leading)
+    ...advancing 12
+
+leading step 8 (41.64% at leading): 
+    Z_M[index] = mass_Z
+    ...catching up 13 (41.64% at leading)
+    ...advancing 14
+
+```
+
+An alternative (shown below) is to keep track of mass closest to 91 GeV while going through the loop. With this method, execution time stayed somewhat the same but it took 24 vectorized step instead.
+
+```python
+def best_Z(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M):
+	...
+	for i in range(len(pair_index_list)):
+		mass = ...
+
+		if abs(mass-91) < abs(mass-mass_Z):
+			mass_Z = mass
+	Z_M[index] = mass_Z
+	
+```
+
