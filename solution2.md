@@ -1,4 +1,4 @@
-# Solution 1: vectorized HEP
+# Solution 2: vectorized HEP
 
 ## Background
 
