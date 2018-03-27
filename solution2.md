@@ -16,7 +16,7 @@ stops = columns["Muon_Px"].stops
 ```
 
 
-## The Baby step
+## The baby step
 
 To understand the dataset and calculation better, the most straightforward solution -- *the baby step* was taken.
 
@@ -73,7 +73,7 @@ leading step 5 (41.64% at leading):
 
 Taking a [closer look](https://docs.python.org/2/library/itertools.html#itertools.combinations) at `combination` function, the execution time is a second degree polynomial. So this approach contains two loops, one iterates for N square times and one for NPair times (where N = # muons, NPair = # muon pairs).
 
-## Pair Listing
+## Pair listing
 
 Since we can't find a way to index on a different scale (yet), we can try to speed up this computation by reduce the number of loops and their length in a function. To reduce it to a linear time, we can create combination by going through the list only once (hence taking linear time). The idea is that the first item is paired with the other n-1 items, the second item is paired with the other n-2, and so on. From that we can create two arrays whose length is the number of pairs. For example, if there are four elements, we can create
 
@@ -151,17 +151,13 @@ leading step 10 (41.64% at leading):
 This approach does not perform very well. From rough execution time measurement, it takes as long as the previous approach. This could be due to more operation loads in the loop and the fact that it performs vectorized operation on an array (not a single value like in the previous method.
 
 
-## Baby Step Revisit: Divided Vectorized Functions
+## Baby step revisit: Divided vectorized functions
 Since using index pairs as in the baby step seemed like a smart idea, we use that and modify the loop instead. One way to get rid of for loop altogether is to use two vectorized function. First indexes of muon pairs are obtained for every event. Flattening that list, we get all muon pairs indexes across all events.
 
 ```python
 def get_pair_index(index, starts, stops, pair_index_per_event):
 	index_range = range(starts[index], stops[index])
 	pair_index_per_event[index] = list(combinations(index_range, 2))
-
-pair_index_per_event = np.empty(len(starts), dtype=(object))
-vectorize(get_pair_index, len(starts), starts, stops, pair_index_per_event)
-pair_index = list(pair_index_per_event).flatten
 ```
 
 Now we can just index on the number of muon pairs, and compute Z mass from energy and momentum using the indexes from before
@@ -177,6 +173,9 @@ def get_pair_mass(index, pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M):
 This method was the fastest with least vectorized steps among the three. It also does not takes up a lot of memory space since it only creates one extra index list, instead of a nested list of pair masses per events.
 
 ```python
+>>> pair_index_per_event = np.empty(len(starts), dtype=(object))
+>>> vectorize(get_pair_index, len(starts), starts, stops, pair_index_per_event)
+>>> pair_index = list(pair_index_per_event).flatten
 >>> Pair_M = np.empty(len(pair_index))
 >>> vectorize(get_pair_mass, len(pair_index), pair_index, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Pair_M)
 leading step 0 (100.0% at leading): 
@@ -269,3 +268,57 @@ def best_Z(index, starts, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz, Z_M):
 	
 ```
 
+
+## Early version of functional interface
+
+Usage of the vectorization can be further simplified by hiding vectorized functions under a functinoal interface. A function `vmap` was added to a `functional.py` library whose implementation is shown below. It's basically a mapping function that use vectorization under the hood. The biggest limitation of this implementation is that it requires an output array to be initiated and passed as an argument, which does not make much sense at all, but it makes it works for now.
+
+```python
+def vmapper(lst):
+    if isinstance(lst, (list, tuple, ListProxy)):
+        out = lambda f, out, *args: (vectorize(f, len(lst), out, lst, *args), out)[-1]
+    else:
+        out = lambda f, out, *args: (vectorize(f, len(lst), out, lst, *args), out)[-1]
+    out.func_name = "[...].vmap"
+    out.__doc__ = mapper.__doc__
+    return out```
+
+The first argument of the function must be index as before. In addition, the function must take an instantiated output array as the second argument, and a list that index iterates over as the third argument. 
+As an example, consider this function that add constant value to all elements in a list of integers. Since output is always create as a numpy array, a list is converted to a numpy array.
+
+```python
+>>> def add_const(index, out, lst, const):
+...     lst = np.array(lst)
+...     out[index] = lst[index] + const
+```
+
+```python
+>>> lst = [1,2,3]
+>>> out = np.zeros(3)
+>>> lst.vmap(add_const, out, 2)
+leading step 0 (100.0% at leading): 
+    lst = np.array(lst)
+    ...advancing 1
+
+leading step 1 (100.0% at leading): 
+    out[index] = (lst[index] + const)
+    ...advancing 2
+
+array([3., 4., 5.])
+```
+
+This functional call is then apply to compute Z mass using baby step method.
+
+```python
+Pair_M = np.empty(len(starts), dtype=(object))
+zmass = list(starts).vmap(baby_step, Pair_M, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
+```
+
+Similarly, it was applied the best Z candidate function. `zmass` contains those Z mass values, -1 in the array indicates that there is no muon pairs to make up Z boson in that event.
+
+```
+Z_M = np.empty(len(starts))
+zmass = list(starts).vmap(best_Z, Z_M, stops, Muon_E, Muon_Px, Muon_Py, Muon_Pz)
+```
+
+Both of them returns the same result as the previous `vectorize` call.
