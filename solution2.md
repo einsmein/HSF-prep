@@ -281,7 +281,8 @@ def vmapper(lst):
         out = lambda f, out, *args: (vectorize(f, len(lst), out, lst, *args), out)[-1]
     out.func_name = "[...].vmap"
     out.__doc__ = mapper.__doc__
-    return out```
+    return out
+```
 
 For a vectorized function, some more restriction is required. In addition to index as the first argument, it must take an instantiated output array as the second argument, and a list that index iterates over as the third argument. 
 As an example, consider this function that add constant value to all elements in a list of integers.
